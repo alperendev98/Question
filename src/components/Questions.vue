@@ -9,18 +9,18 @@
         
     </div>
     <b-field class="col-lg-8 text-left">
-        <b-radio v-model="radio" native-value="YES" >
+        <b-radio v-model="radioMain" native-value="YES" >
             YES
         </b-radio>
     
     </b-field>
     <b-field class="col-lg-8 text-left">
-        <b-radio v-model="radio" native-value="NO" >
+        <b-radio v-model="radioMain" native-value="NO" >
             NO
         </b-radio>
     </b-field>
 
-    <template v-if="radio === 'YES'">
+    <template v-if="radioMain === 'YES'">
         <!-- // address -->
         
         <b-field label="What is the address" class="col-lg-8 text-left mt-5"><!-- (use the Google maps API we used before) -->
@@ -39,7 +39,7 @@
         <!-- // price -->
         
         <b-field label="What is the estimated purchase price?" class="col-lg-8 text-left mt-5">
-            <b-input v-model="name"></b-input>
+            <b-input v-model="estimatedprice"></b-input>
         </b-field>
     
         
@@ -64,7 +64,7 @@
 
         <!-- // annual  -->
         <b-field label="What is your annual household income?" class="col-lg-8 text-left mt-5">
-            <b-input v-model="name"></b-input>
+            <b-input v-model="annual"></b-input>
         </b-field>
     
         <!-- // own home -->
@@ -163,17 +163,20 @@
     </template>
 
     <!-- //////////////// NO ///////////////// -->
-    <template v-else-if="radio === 'NO'">
+    <template v-else-if="radioMain === 'NO'">
 
         <!-- county -->
         
         <b-field label="What county do you want to buy in?" class="col-lg-8 text-left mt-5">
-            <dropdown></dropdown>
+            <b-select placeholder="Select County" v-model="selectedCounty">
+                <option v-for="(county, index) in arrayOfCounty" :key="index" :value="county.name">{{county.name}}</option>
+
+            </b-select>
         </b-field>
         <!-- approximate purchase price -->
 
         <b-field label="How much is the approximate purchase price of the home you want to buy?" class="col-lg-8 text-left mt-5">
-            <b-input v-model="emailaddress"></b-input>
+            <b-input v-model="approximateprice"></b-input>
         </b-field>
 
         <!-- // purchase realtor -->
@@ -196,7 +199,7 @@
         
         <!-- // annual  -->
         <b-field label="What is your annual household income?" class="col-lg-8 text-left mt-5">
-            <b-input v-model="name"></b-input>
+            <b-input v-model="annual"></b-input>
         </b-field>
     
         <!-- // own home -->
@@ -300,7 +303,7 @@
     </template>
 
     
-    <b-message type="is-success" class="col-lg-8" v-if="radio === 'none'">
+    <b-message type="is-success" class="col-lg-8" v-if="radioMain === 'none'">
         To continue, please select above option
     </b-message>
     <b-field class="col-lg-7 text-right" v-else>
@@ -312,28 +315,38 @@
 </template>
 
 <script>
-import DropdownCounty from './DropdownCounty'
 import VueGoogleAutocomplete from 'vue-google-autocomplete'
-import axios from 'axios'
 export default {
-  name: 'Questions',
-  data() {
+    name: 'Questions',
+    created() {
+        
+    },
+    data() {
         return {
-            radio: 'none',
-            radioREALTOR: 'none',
-            radioHome: 'none',
-            radioPrimaryHome: 'none',
-            radioVeteran : 'none',
-            radioDisability : "none",
+            radioMain: '',
+            radioREALTOR: '',
+            radioHome: '',
+            radioPrimaryHome: '',
+            radioVeteran : '',
+            radioDisability : '',
             address: '',
             postBody: '',
             errors: [],
+            emailaddress : '',
+            firstname : '',
+            lastname : '',
+            phonenumber : '',
+            estimatedprice : '',
+            annual : '',
+            approximateprice : '',
+            selectedCounty : {name:"None"},
+            arrayOfCounty : [ {name:'Alameda'}, {name:'Alpine'}, {name:'Amador'}, {name:'Butte'}, {name:'Calaveras'}, {name:'Colusa'}, {name:'Contra Costa'}, {name:'Del Norte'}, {name:'El Dorado'}, {name:'Fresno'}, {name:'Glenn'}, {name:'Humboldt'}, {name:'Imperial'}, {name:'Inyo'}, {name:'Kern'}, {name:'Kings'}, {name:'Lake'}, {name:'Lassen'}, {name:'Los Angeles'}, {name:'Madera'}, {name:'Marin'}, {name:'Mariposa'}, {name:'Mendocino'}, {name:'Merced'}, {name:'Modoc'}, {name:'Mono'}, {name:'Monterey'}, {name:'Napa'}, {name:'Nevada'}, {name:'Orange'}, {name:'Placer'}, {name:'Plumas'}, {name:'Riverside'}, {name:'Sacramento'}, {name:'San Benito'}, {name:'San Bernardino'}, {name:'San Diego'}, {name:'San Francisco'}, {name:'San Joaquin'}, {name:'San Luis Obispo'}, {name:'San Mateo'}, {name:'Santa Barbara'}, {name:'Santa Clara'}, {name:'Santa Cruz'}, {name:'Shasta'}, {name:'Sierra'}, {name:'Siskiyou'}, {name:'Solano'}, {name:'Sonoma'}, {name:'Stanislaus'}, {name:'Sutter'}, {name:'Tehama'}, {name:'Trinity'}, {name:'Tulare'}, {name:'Tuolumne'}, {name:'Ventura'}, {name:'Yolo'}, {name:'Yuba'}],
+        
             
         }
     },
     components: {
-        dropdown: DropdownCounty,
-        VueGoogleAutocomplete
+        VueGoogleAutocomplete,
     },
     methods: {
         /**
@@ -345,18 +358,23 @@ export default {
         getAddressData: function (addressData, placeResultData, id) {
             this.address = addressData;
         },
-        alert() {
-            this.$dialog.alert('Searching for programs. Make it look busy then inform them that a licensed, zero down payment expert will be reaching out to review their options')
+        alert(response) {
+            this.$dialog.alert(response)
             
         },
         // Pushes posts to the server when called.
         postPost() {
-            this.postBody = this.address
-            axios.post(`http://jsonplaceholder.typicode.com/posts`, {
+                        
+            if (this.radioMain === 'YES') {
+                this.postBody = { "mainpurchase" : this.radioMain, "address": this.address, "price" : this.estimatedprice, "realtor" : this.radioREALTOR, "annual" : this.annual, "ownhome" : this.radioHome, "hometype" : this.radioPrimaryHome, "veteran" : this.radioVeteran, "disability" : this.radioDisability, "firstname" : this.firstname, "lastname" : this.lastname, "phonenumber" : this.phonenumber, "emailaddress" : this.emailaddress} 
+            }else {
+                this.postBody = { "mainpurchase" : this.radioMain, "county": this.selectedCounty, "price" : this.approximateprice, "realtor" : this.radioREALTOR, "annual" : this.annual, "ownhome" : this.radioHome, "hometype" : this.radioPrimaryHome, "veteran" : this.radioVeteran, "disability" : this.radioDisability, "firstname" : this.firstname, "lastname" : this.lastname, "phonenumber" : this.phonenumber, "emailaddress" : this.emailaddress}
+            }
+            this.$http.post('https://renercrows.000webhostapp.com/sendemail.php', {
             body: this.postBody
             })
             .then(response => {
-                this.alert()
+                this.alert(response)
 
             })
             .catch(e => {

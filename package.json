@@ -12,9 +12,13 @@
   "dependencies": {
     "axios": "^0.18.0",
     "buefy": "^0.6.5",
+    "graceful-fs": "^4.1.11",
+    "hashids": "^1.1.4",
+    "load-json-file": "^5.0.0",
     "vue": "^2.5.2",
     "vue-google-autocomplete": "^1.1.0",
-    "vue-router": "^3.0.1"
+    "vue-router": "^3.0.1",
+    "write-json-file": "^2.3.0"
   },
   "devDependencies": {
     "autoprefixer": "^7.1.2",
